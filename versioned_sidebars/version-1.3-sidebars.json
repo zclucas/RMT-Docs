@@ -1,0 +1,432 @@
+{
+  "rmtSidebar": [
+    {
+      "type": "doc",
+      "id": "intro"
+    },
+    {
+      "type": "category",
+      "label": "软件介绍",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "guide/index"
+        },
+        {
+          "type": "doc",
+          "id": "guide/global-actions"
+        },
+        {
+          "type": "doc",
+          "id": "guide/tabs"
+        },
+        {
+          "type": "doc",
+          "id": "guide/macro-module"
+        },
+        {
+          "type": "doc",
+          "id": "guide/macro-config"
+        },
+        {
+          "type": "doc",
+          "id": "guide/config-manage"
+        },
+        {
+          "type": "doc",
+          "id": "guide/tools"
+        },
+        {
+          "type": "doc",
+          "id": "guide/settings"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "快速上手",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "quickstart/index"
+        },
+        {
+          "type": "doc",
+          "id": "quickstart/basics"
+        },
+        {
+          "type": "doc",
+          "id": "quickstart/examples"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "指令手册",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "commands/index"
+        },
+        {
+          "type": "doc",
+          "id": "commands/key"
+        },
+        {
+          "type": "doc",
+          "id": "commands/bg-key"
+        },
+        {
+          "type": "doc",
+          "id": "commands/bg-mouse"
+        },
+        {
+          "type": "doc",
+          "id": "commands/move"
+        },
+        {
+          "type": "doc",
+          "id": "commands/move-pro"
+        },
+        {
+          "type": "doc",
+          "id": "commands/delta-move"
+        },
+        {
+          "type": "doc",
+          "id": "commands/joy"
+        },
+        {
+          "type": "doc",
+          "id": "commands/key-check"
+        },
+        {
+          "type": "doc",
+          "id": "commands/joy-listen"
+        },
+        {
+          "type": "doc",
+          "id": "commands/search"
+        },
+        {
+          "type": "doc",
+          "id": "commands/search-pro"
+        },
+        {
+          "type": "doc",
+          "id": "commands/search-combo"
+        },
+        {
+          "type": "doc",
+          "id": "commands/input"
+        },
+        {
+          "type": "doc",
+          "id": "commands/output"
+        },
+        {
+          "type": "doc",
+          "id": "commands/variable"
+        },
+        {
+          "type": "doc",
+          "id": "commands/variable-extract"
+        },
+        {
+          "type": "doc",
+          "id": "commands/operation"
+        },
+        {
+          "type": "doc",
+          "id": "commands/array"
+        },
+        {
+          "type": "doc",
+          "id": "commands/text-ops"
+        },
+        {
+          "type": "doc",
+          "id": "commands/file-io"
+        },
+        {
+          "type": "doc",
+          "id": "commands/excel"
+        },
+        {
+          "type": "doc",
+          "id": "commands/interval"
+        },
+        {
+          "type": "doc",
+          "id": "commands/loop"
+        },
+        {
+          "type": "doc",
+          "id": "commands/jump"
+        },
+        {
+          "type": "doc",
+          "id": "commands/if"
+        },
+        {
+          "type": "doc",
+          "id": "commands/if-pro"
+        },
+        {
+          "type": "doc",
+          "id": "commands/wait"
+        },
+        {
+          "type": "doc",
+          "id": "commands/wait-confirm"
+        },
+        {
+          "type": "doc",
+          "id": "commands/time"
+        },
+        {
+          "type": "doc",
+          "id": "commands/run"
+        },
+        {
+          "type": "doc",
+          "id": "commands/run-pro"
+        },
+        {
+          "type": "doc",
+          "id": "commands/macro-op"
+        },
+        {
+          "type": "doc",
+          "id": "commands/window-manage"
+        },
+        {
+          "type": "doc",
+          "id": "commands/rmt-cmd"
+        },
+        {
+          "type": "doc",
+          "id": "commands/shot"
+        },
+        {
+          "type": "doc",
+          "id": "commands/remark"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "命令行",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "cli/index"
+        },
+        {
+          "type": "doc",
+          "id": "cli/usage"
+        },
+        {
+          "type": "doc",
+          "id": "cli/help"
+        },
+        {
+          "type": "doc",
+          "id": "cli/background"
+        },
+        {
+          "type": "doc",
+          "id": "cli/start-macro"
+        },
+        {
+          "type": "doc",
+          "id": "cli/stop-macro"
+        },
+        {
+          "type": "doc",
+          "id": "cli/stop-all"
+        },
+        {
+          "type": "doc",
+          "id": "cli/pause-macro"
+        },
+        {
+          "type": "doc",
+          "id": "cli/resume-macro"
+        },
+        {
+          "type": "doc",
+          "id": "cli/pause-all"
+        },
+        {
+          "type": "doc",
+          "id": "cli/resume-all"
+        },
+        {
+          "type": "doc",
+          "id": "cli/set-var"
+        },
+        {
+          "type": "doc",
+          "id": "cli/get-var"
+        },
+        {
+          "type": "doc",
+          "id": "cli/set-array"
+        },
+        {
+          "type": "doc",
+          "id": "cli/get-array"
+        },
+        {
+          "type": "doc",
+          "id": "cli/status"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "界面宏字段绑定",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "ui-bind/index"
+        },
+        {
+          "type": "doc",
+          "id": "ui-bind/control-types"
+        },
+        {
+          "type": "doc",
+          "id": "ui-bind/inline-params"
+        },
+        {
+          "type": "doc",
+          "id": "ui-bind/sequence-fields"
+        },
+        {
+          "type": "doc",
+          "id": "ui-bind/macro-action-fields"
+        },
+        {
+          "type": "doc",
+          "id": "ui-bind/nested-macro"
+        },
+        {
+          "type": "doc",
+          "id": "ui-bind/unsupported-fields"
+        },
+        {
+          "type": "doc",
+          "id": "ui-bind/write-and-hold"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "常见问题",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "faq/index"
+        },
+        {
+          "type": "doc",
+          "id": "faq/config-not-applied"
+        },
+        {
+          "type": "doc",
+          "id": "faq/migrate-config"
+        },
+        {
+          "type": "doc",
+          "id": "faq/feedback"
+        },
+        {
+          "type": "doc",
+          "id": "faq/in-game-invalid"
+        },
+        {
+          "type": "doc",
+          "id": "faq/side-button"
+        },
+        {
+          "type": "doc",
+          "id": "faq/partial-key-invalid"
+        },
+        {
+          "type": "doc",
+          "id": "faq/suddenly-invalid"
+        },
+        {
+          "type": "doc",
+          "id": "faq/logitech"
+        },
+        {
+          "type": "doc",
+          "id": "faq/cmd-lost"
+        },
+        {
+          "type": "doc",
+          "id": "faq/key-state"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "常见报错",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "errors/index"
+        },
+        {
+          "type": "doc",
+          "id": "errors/runtime-error-1"
+        },
+        {
+          "type": "doc",
+          "id": "errors/runtime-error-2"
+        },
+        {
+          "type": "doc",
+          "id": "errors/runtime-error-3"
+        },
+        {
+          "type": "doc",
+          "id": "errors/migration-error"
+        },
+        {
+          "type": "doc",
+          "id": "errors/audio-error"
+        },
+        {
+          "type": "doc",
+          "id": "errors/excel-error"
+        },
+        {
+          "type": "doc",
+          "id": "errors/opencv-error"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "开发指南",
+      "collapsed": true,
+      "items": [
+        {
+          "type": "doc",
+          "id": "dev/index"
+        }
+      ]
+    }
+  ]
+}

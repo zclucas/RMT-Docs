@@ -18,6 +18,7 @@ npm run build:offline          # 离线版，默认取最新已发布版
 | 路径 | 用途 |
 | --- | --- |
 | `docs/` | 最新版，跟随开发，版本下拉显示为「最新版」 |
+| `versioned_docs/version-1.3/` | v1.3 快照 |
 | `versioned_docs/version-1.2.2/` | v1.2.2 快照 |
 | `versioned_docs/version-1.1.2/` | v1.1.2 快照 |
 | `changelog/` | 更新日志，独立 docs 实例，不分版本 |
@@ -36,6 +37,8 @@ docs/
   guide/               软件介绍
   quickstart/          快速上手
   commands/            指令手册
+  cli/                 命令行
+  ui-bind/             界面宏字段绑定
   faq/                 常见问题
   errors/              常见报错
   dev/                 开发指南

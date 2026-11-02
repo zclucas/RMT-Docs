@@ -35,7 +35,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          // 在线文档直接部署在域名根路径：/、/commands/、/1.2.2/...。
+          // 在线文档直接部署在域名根路径：/、/commands/、/1.3/...。
           // 历史版本会自动以 /<版本号>/ 为前缀，不再额外包含 /docs/。
           routeBasePath: '/',
           // 版本下拉里，"当前开发版" 显示的标签
