@@ -32,7 +32,7 @@ const TARGETS = [
     img: '1.3',
   },
   {
-    srcs: ['versioned_docs/version-1.3/Web', '_demo-template/Web-1.3'],
+    srcs: ['versioned_docs/version-1.2.2/Web', '_demo-template/Web-1.2.2'],
     out: 'docs',
     img: 'latest',
   },

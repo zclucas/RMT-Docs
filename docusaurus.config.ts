@@ -35,13 +35,16 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          // 在线文档直接部署在域名根路径：/、/commands/、/1.3/...。
+          // 正式版 1.2.2 放在网站根路径。1.3 是测试版，从 /1.3/ 进入。
           // 历史版本会自动以 /<版本号>/ 为前缀，不再额外包含 /docs/。
           routeBasePath: '/',
-          // 版本下拉里，"当前开发版" 显示的标签
+          lastVersion: '1.2.2',
           versions: {
             current: {
               label: '最新版',
+            },
+            '1.3': {
+              label: '1.3 测试版',
             },
           },
         },

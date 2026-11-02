@@ -272,12 +272,15 @@ body {
 .theme-doc-sidebar-menu .menu__link[href$='/faq/side-button'] { --sidebar-item-icon: '🖱'; }
 .theme-doc-sidebar-menu .menu__link[href$='/faq/suddenly-invalid'] { --sidebar-item-icon: '⚡'; }
 .theme-doc-sidebar-menu .menu__link[href$='/faq/cmd-lost'] { --sidebar-item-icon: '📋'; }
+.theme-doc-sidebar-menu .menu__link[href$='/faq/migrate-config'] { --sidebar-item-icon: '📦'; }
+.theme-doc-sidebar-menu .menu__link[href$='/faq/feedback'] { --sidebar-item-icon: '💬'; }
 .theme-doc-sidebar-menu .menu__link[href$='/errors/audio-error'] { --sidebar-item-icon: '🔊'; }
 .theme-doc-sidebar-menu .menu__link[href$='/errors/excel-error'] { --sidebar-item-icon: '📊'; }
 .theme-doc-sidebar-menu .menu__link[href$='/errors/migration-error'] { --sidebar-item-icon: '🔄'; }
 .theme-doc-sidebar-menu .menu__link[href$='/errors/runtime-error-1'] { --sidebar-item-icon: '⚠'; }
 .theme-doc-sidebar-menu .menu__link[href$='/errors/runtime-error-2'] { --sidebar-item-icon: '⚠'; }
 .theme-doc-sidebar-menu .menu__link[href$='/errors/runtime-error-3'] { --sidebar-item-icon: '⚠'; }
+.theme-doc-sidebar-menu .menu__link[href$='/errors/opencv-error'] { --sidebar-item-icon: '🖼'; }
 
 /* 首页说明：加强第一段的阅读层级，并把入口整理成轻量卡片。 */
 html.docs-doc-id-intro .theme-doc-markdown > p:first-of-type {
@@ -364,7 +367,7 @@ html.docs-doc-id-intro .theme-doc-markdown > ul li::before {
 .theme-doc-sidebar-menu .menu__link[href$='/commands/input'] { --command-icon: url('/img/command-icons/Input.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/output'] { --command-icon: url('/img/command-icons/Output.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/loop'] { --command-icon: url('/img/command-icons/Loop.png'); }
-.theme-doc-sidebar-menu .menu__link[href$='/commands/macro-op'] { --command-icon: url('/img/command-icons/Sub.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/macro-op'] { --command-icon: url('/img/command-icons/MacroAction.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/variable'] { --command-icon: url('/img/command-icons/Var.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/variable-extract'] { --command-icon: url('/img/command-icons/Extract.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/if'] { --command-icon: url('/img/command-icons/If.png'); }
@@ -376,11 +379,21 @@ html.docs-doc-id-intro .theme-doc-markdown > ul li::before {
 .theme-doc-sidebar-menu .menu__link[href$='/commands/array'] { --command-icon: url('/img/command-icons/Arr.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/rmt-cmd'] { --command-icon: url('/img/command-icons/rabit.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/bg-mouse'] { --command-icon: url('/img/command-icons/Mouse.png'); }
-.theme-doc-sidebar-menu .menu__link[href$='/commands/bg-key'] { --command-icon: url('/img/command-icons/Key.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/bg-key'] { --command-icon: url('/img/command-icons/BGKey.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/window-manage'] { --command-icon: url('/img/command-icons/WindowManage.png'); }
-.theme-doc-sidebar-menu .menu__link[href$='/commands/key-check'] { --command-icon: url('/img/command-icons/KeyCheck.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/key-check'] { --command-icon: url('/img/command-icons/KeyListen.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/remark'] { --command-icon: url('/img/command-icons/Comment.png'); }
 .theme-doc-sidebar-menu .menu__link[href$='/commands/shot'] { --command-icon: url('/img/command-icons/ScreenShot.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/delta-move'] { --command-icon: url('/img/command-icons/DeltaMove.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/joy'] { --command-icon: url('/img/command-icons/Joy.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/joy-listen'] { --command-icon: url('/img/command-icons/JoyListen.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/search-combo'] { --command-icon: url('/img/command-icons/SearchCombo.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/excel'] { --command-icon: url('/img/command-icons/Excel.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/jump'] { --command-icon: url('/img/command-icons/FlowJump.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/wait'] { --command-icon: url('/img/command-icons/Wait.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/wait-confirm'] { --command-icon: url('/img/command-icons/WaitConfirm.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/time'] { --command-icon: url('/img/command-icons/Time.png'); }
+.theme-doc-sidebar-menu .menu__link[href$='/commands/run-pro'] { --command-icon: url('/img/command-icons/RunPro.png'); }
 
 /* 右侧目录沿用温和的绿色定位，不与正文争夺注意力。 */
 .table-of-contents__link--active {

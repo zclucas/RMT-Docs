@@ -1,5 +1,5 @@
 ---
-title: "📘 开发指南（RMT）"
+title: "🛠️ 开发指南（RMT）"
 sidebar_position: 1
 ---
 本文档概述了 RMT（若梦兔）按键宏工具的模块架构与功能，方便开发者快速理解项目结构与功能。
@@ -295,8 +295,7 @@ GDI+ 图像处理库。
 | `SearchGui.ahk` | 图片搜索编辑 |
 | `SearchProGui.ahk` | 专业搜索编辑 |
 | `LoopGui.ahk` | 循环指令编辑 |
-| `RunGui.ahk` | 运行（备注 + 目标） |
-| `RunProGui.ahk` | 运行Pro（模式/输入输出） |
+| `RunGui.ahk` | 运行文件编辑 |
 | `CompareGui.ahk` | 条件比较编辑 |
 | `CompareProGui.ahk` | 专业比较编辑 |
 | `TextOpsGui.ahk` | 文本处理编辑 |
@@ -310,7 +309,6 @@ GDI+ 图像处理库。
 | `MouseMoveGui.ahk` | 鼠标移动编辑 |
 | `MMProGui.ahk` | 专业鼠标移动编辑 |
 | `KeyCheckGui.ahk` | 按键检测编辑 |
-| `JoyCheckGui.ahk` | 手柄检测编辑 |
 | `OutputGui.ahk` | 输出指令编辑 |
 | `SubMacroGui.ahk` | 子宏调用编辑 |
 | `WindowManageGui.ahk` | 窗口管理编辑 |
@@ -422,10 +420,8 @@ Worker 通过共享内存（`SharedMemory`）+ 环形缓冲区（`RingBuffer`）
 如果调整会对 `Work.ahk` 有影响，需要先重新编译：
 如果重新编译觉得麻烦，也可以临时把多线程改成 0。
 
-修改 Worker 入口及其引用的执行逻辑、数据结构或进程通信代码后，也需要重新编译。建议先输出到临时文件，确认编译成功后再替换 `Thread\Work.exe`。
-
-1. **准备编译环境**
-   安装 AutoHotkey v2 和 Ahk2Exe，确认编译器及所需架构的 AutoHotkey 基础程序存在。
+1. **清理旧文件**  
+   删除 `Thread` 目录下所有的 `.exe` 文件（或删除后运行时会自动重新生成）。
 
 2. **打开编译工具**  
    通过 `AutoHotkey Dash` → 选择 `Compile`。
@@ -435,16 +431,6 @@ Worker 通过共享内存（`SharedMemory`）+ 环形缓冲区（`RingBuffer`）
 
 4. **设置输出路径**  
    - **Destination**：设置为 `Thread` 目录下的 `Work.exe`。
-   - **Base**：源码开发环境使用 `AutoHotkey64.exe`；生成 x86 发行版时使用 `AutoHotkey32.exe`。
-   - **Icon**：选择 `Images\Soft\rabit.ico`。
-
-`PackRMT.ps1` 会编译开发环境的 x64 Worker，再打包帮助文档，之后提供发行版选项。若只需更新帮助文档，可在项目根目录执行：
-
-```powershell
-node Web/JS/SingleHtml.js
-```
-
-生成器读取 `Web` 目录下的 Markdown，嵌入图片及脚本并生成根目录 `index.html`。文档内容应修改 Markdown 源文件，再重新生成 HTML；打开 `index.html` 可离线阅读并检查搜索和章节跳转。
 
 ### 运行 RMT.ahk
 直接双击 `RMT.ahk` 文件即可运行。
