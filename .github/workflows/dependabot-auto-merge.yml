@@ -30,6 +30,14 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           DEPENDENCY_UPDATES: ${{ steps.metadata.outputs.updated-dependencies-json }}
         run: |
+          # The metadata action reads the first commit. Verify it is also the current head.
+          if ! gh api "repos/$GH_REPO/pulls/$PR_NUMBER/commits?per_page=2" |
+            jq -e --arg head "$PR_HEAD_SHA" 'length == 1 and .[0].sha == $head and
+              .[0].author.login == "dependabot[bot]" and .[0].commit.verification.verified' >/dev/null; then
+            echo "Leaving the pull request for manual review."
+            exit 0
+          fi
+
           # The summary can be "patch" even if a grouped update includes an unknown version.
           if ! jq -e 'length > 0 and all(.[]; .updateType == "version-update:semver-patch")' \
             <<< "$DEPENDENCY_UPDATES" >/dev/null; then
