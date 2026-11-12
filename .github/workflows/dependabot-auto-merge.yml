@@ -45,4 +45,11 @@ jobs:
             exit 0
           fi
 
+          # GitHub can be recalculating mergeability after another PR updates main.
+          for delay in 5 10 20; do
+            if gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$PR_HEAD_SHA"; then
+              exit 0
+            fi
+            sleep "$delay"
+          done
           gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$PR_HEAD_SHA"
