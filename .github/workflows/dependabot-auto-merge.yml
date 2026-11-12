@@ -1,0 +1,40 @@
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Only read signed Dependabot metadata in this privileged workflow.
+      - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
+        id: metadata
+      - name: Enable auto-merge for patch updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DEPENDENCY_UPDATES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          # The summary can be "patch" even if a grouped update includes an unknown version.
+          if ! jq -e 'length > 0 and all(.[]; .updateType == "version-update:semver-patch")' \
+            <<< "$DEPENDENCY_UPDATES" >/dev/null; then
+            echo "Leaving the pull request for manual review."
+            exit 0
+          fi
+
+          gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$PR_HEAD_SHA"
