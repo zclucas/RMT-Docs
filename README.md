@@ -76,13 +76,15 @@ node scripts/convert-web.mjs
 
 ## 发一个新版本
 
-确认 `docs/` 就是这一版的样子后：
-
 ```bash
-npm run docs:version 1.3.0
+git tag v1.4.0 && git push origin v1.4.0
 ```
 
-它会把 `docs/` 复制成 `versioned_docs/version-1.3.0/`，更新 `versions.json` 和版本下拉。之后 `docs/` 继续作为下一版在开发的内容。
+`docs-release.yml` 快照 `docs/` 到 `versioned_docs/version-1.4.0/`，改 `versions.json` 和 `lastVersion`，过 typecheck + 在线构建 + 离线构建后提交 main，CF Pages 自动发布。
+
+- tag 必须在 main 顶端，否则失败。
+- 快照是 tag 之后的下一个提交，`git checkout v1.4.0` 里没有新版本目录。
+- 只本地快照：`npm run docs:version 1.4.0`，`lastVersion` 手动改。
 
 ## 离线版（打包进 RMT）
 

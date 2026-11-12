@@ -12,7 +12,12 @@ import baseConfig from './docusaurus.config';
 const base = baseConfig as any;
 const preset = base.presets?.[0]?.[1] ?? {};
 const docsOptions = {...(preset.docs ?? {})};
+// 离线包只放一个版本（disableVersioning: true），插件里就只剩一个叫 current 的版本。
+// 基准配置里的 lastVersion / onlyIncludeVersions 指向的是在线站的多版本命名（1.2.2 等），
+// 带过来会报 "lastVersion: 1.2.2 is invalid. Available version names are: current"。
 delete docsOptions.versions;
+delete docsOptions.lastVersion;
+delete docsOptions.onlyIncludeVersions;
 
 const siteDir = process.cwd();
 const versions: string[] = fs.existsSync(path.join(siteDir, 'versions.json'))
