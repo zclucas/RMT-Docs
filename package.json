@@ -15,7 +15,11 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "docs:version": "docusaurus docs:version"
+    "docs:version": "docusaurus docs:version",
+    "i18n:add": "node tools/i18n/add-locale.mjs",
+    "i18n:sync": "node tools/i18n/translate.mjs",
+    "i18n:check": "node tools/i18n/check.mjs",
+    "i18n:prepare-offline": "node tools/i18n/prepare-offline.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

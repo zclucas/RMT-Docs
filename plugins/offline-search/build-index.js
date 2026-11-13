@@ -134,8 +134,10 @@ function collectDocRoutes(routes, parentPath, acc) {
   return acc;
 }
 
-// 分组名取最近的 _category_.json，和侧边栏分组一致
-function findCategoryLabel(docsDir, absFile) {
+// 分组名取最近的 _category_.json，和侧边栏分组一致。
+// 目标语言没有 _category_.json（翻译流程只写 .md 和 current.json），
+// 所以在源目录拿到中文标签后，再去该语言的 current.json 里换一次译名。
+function findCategoryLabel(docsDir, absFile, categoryTranslations) {
   const root = path.resolve(docsDir);
   let dir = path.dirname(path.resolve(absFile));
   for (;;) {
@@ -143,7 +145,10 @@ function findCategoryLabel(docsDir, absFile) {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        if (parsed && parsed.label) return String(parsed.label);
+        if (parsed && parsed.label) {
+          const label = String(parsed.label);
+          return categoryTranslations[label] ?? label;
+        }
       } catch {
         // 分组文件坏了就继续往上找，不影响搜索
       }
@@ -155,35 +160,100 @@ function findCategoryLabel(docsDir, absFile) {
   }
 }
 
-function buildIndex({routes, siteDir, docsDir, versionLabel}) {
-  const root = path.resolve(docsDir);
-  const docs = [];
-  const missing = [];
-  const seen = new Set();
-
-  for (const {permalink, file} of collectDocRoutes(routes, '/', [])) {
-    const absFile = path.resolve(siteDir, file);
-    // 只收被离线版打包的那个版本目录，防止把别的版本混进来
-    if (absFile !== root && !absFile.startsWith(root + path.sep)) continue;
-    if (seen.has(permalink)) continue;
-    seen.add(permalink);
-
-    const raw = readText(absFile);
-    if (raw === null) {
-      missing.push(file);
-      continue;
+// current.json / version-x.json 里的分类译名：sidebar.<sidebarId>.category.<中文名>
+function loadCategoryTranslations(jsonFile) {
+  const raw = readText(jsonFile);
+  if (!raw) return {};
+  try {
+    const data = JSON.parse(raw);
+    const map = {};
+    for (const [key, value] of Object.entries(data)) {
+      const match = /^sidebar\.[^.]+\.category\.(.+)$/.exec(key);
+      if (match && value && typeof value.message === 'string') {
+        map[match[1]] = value.message;
+      }
     }
-    const parsed = extractDoc(raw, path.basename(absFile).replace(/\.mdx?$/, ''));
-    docs.push({
-      t: parsed.title, // title
-      p: permalink, // permalink
-      c: findCategoryLabel(root, absFile), // category
-      h: parsed.headings, // headings
-      b: parsed.text, // body
-    });
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+function normalizeRel(file) {
+  return String(file).split(path.sep).join('/');
+}
+
+// 一条路由属于哪门语言：看源文件落在 i18n/<code>/ 还是 .i18n-offline/<code>/ 下。
+// 不靠 URL 前缀判断，是因为离线包走 hash 路由，permalink 的前缀和文件位置不一定同源。
+function detectLocale(file, localeCodes, defaultLocale) {
+  const rel = normalizeRel(file);
+  for (const code of localeCodes) {
+    if (code === defaultLocale) continue;
+    if (
+      rel.includes(`/i18n/${code}/`) ||
+      rel.startsWith(`i18n/${code}/`) ||
+      rel.includes(`/.i18n-offline/${code}/`) ||
+      rel.startsWith(`.i18n-offline/${code}/`)
+    ) {
+      return code;
+    }
+  }
+  return defaultLocale;
+}
+
+/**
+ * @param {object} params
+ * @param {Array} params.routes     Docusaurus 路由表
+ * @param {string} params.siteDir   站点根目录
+ * @param {Array<{code:string, label?:string, docsPath:string, versionLabel?:string}>} params.locales
+ * @param {string} params.defaultLocale
+ */
+function buildIndex({routes, siteDir, locales, defaultLocale}) {
+  const localeCodes = locales.map((item) => item.code);
+  const collected = collectDocRoutes(routes, '/', []);
+  const result = {};
+  const missing = [];
+
+  for (const locale of locales) {
+    const root = path.resolve(siteDir, locale.docsPath);
+    // 分类译名和正文在同一个 i18n 目录下，只是文件名是 current.json / version-x.json
+    const categories = loadCategoryTranslations(
+      path.join(path.dirname(root), `${path.basename(root)}.json`),
+    );
+    const docs = [];
+    const seen = new Set();
+
+    for (const {permalink, file} of collected) {
+      if (detectLocale(file, localeCodes, defaultLocale) !== locale.code) continue;
+      const absFile = path.resolve(siteDir, file);
+      // 只收本语言、本版本目录下的文件，防止把别的版本混进来
+      if (absFile !== root && !absFile.startsWith(root + path.sep)) continue;
+      if (seen.has(permalink)) continue;
+      seen.add(permalink);
+
+      const raw = readText(absFile);
+      if (raw === null) {
+        missing.push(file);
+        continue;
+      }
+      const parsed = extractDoc(raw, path.basename(absFile).replace(/\.mdx?$/, ''));
+      docs.push({
+        t: parsed.title, // title
+        p: permalink, // permalink
+        c: findCategoryLabel(root, absFile, categories), // category
+        h: parsed.headings, // headings
+        b: parsed.text, // body
+      });
+    }
+
+    result[locale.code] = {
+      version: locale.versionLabel ?? '',
+      label: locale.label ?? locale.code,
+      docs,
+    };
   }
 
-  return {version: versionLabel, docs, missing};
+  return {byLocale: result, missing};
 }
 
 module.exports = {buildIndex};

@@ -25,6 +25,8 @@ npm run build:offline          # 离线版，默认取最新已发布版
 | `static/img/latest/`、`static/img/<版本>/` | 各版本配图 |
 | `scripts/convert-web.mjs` | 发布包 `Web/` 导入脚本 |
 | `tools/build_offline.mjs` | 离线版构建入口 |
+| `tools/i18n/` | 多语言：翻译流水线、缺译检查、离线译文准备 |
+| `locales.json` | 语言清单，全站唯一事实来源 |
 | `plugins/offline-search/` | 离线版本地搜索 |
 
 ## 写文档
@@ -76,13 +78,15 @@ node scripts/convert-web.mjs
 
 ## 发一个新版本
 
-确认 `docs/` 就是这一版的样子后：
-
 ```bash
-npm run docs:version 1.3.0
+git tag v1.4.0 && git push origin v1.4.0
 ```
 
-它会把 `docs/` 复制成 `versioned_docs/version-1.3.0/`，更新 `versions.json` 和版本下拉。之后 `docs/` 继续作为下一版在开发的内容。
+`docs-release.yml` 快照 `docs/` 到 `versioned_docs/version-1.4.0/`，改 `versions.json` 和 `lastVersion`，过 typecheck + 在线构建 + 离线构建后提交 main，CF Pages 自动发布。
+
+- tag 必须在 main 顶端，否则失败。
+- 快照是 tag 之后的下一个提交，`git checkout v1.4.0` 里没有新版本目录。
+- 只本地快照：`npm run docs:version 1.4.0`，`lastVersion` 手动改。
 
 ## 离线版（打包进 RMT）
 
@@ -99,6 +103,65 @@ npm run build:offline:next         # docs/，未发布的开发版
 - 能用 `file://` 双击打开，靠官方 hash 路由（`future.experimental_router: 'hash'`）：关掉 SSG、只产出一个 `index.html`、路由走 `/#/xxx`。配置见 `docusaurus.offline.config.ts`。
 - 自带一套本地搜索（`plugins/offline-search/`）：索引在构建时写成普通 `<script src>` 加载的全局变量，不 fetch、不起 Web Worker，`file://` 下可用。在线那套插件在离线配置里被换掉。
 - **不含更新日志**，`/changelog` 只在在线站点提供。
+
+## 多语言
+
+框架已经搭好，默认只启用中文。**加一门语言不需要改代码**，只动 `locales.json`：
+
+```bash
+npm run i18n:add -- en "English"          # 写进 locales.json + 生成文案骨架
+npm run i18n:sync -- --locale en          # 调模型翻译
+npm run build                             # 产出 /（中文）和 /en/（英文）
+```
+
+`locales.json` 里每一项就是一门语言，第一项由 `defaultLocale` 指定为内容源语言。配置、翻译脚本、离线构建、CI 读的都是这一份文件，没有任何地方写死语言代码。
+
+### 接哪个模型
+
+不绑定平台，靠环境变量描述端点。默认走 OpenAI 兼容协议，DeepSeek、通义、Kimi、OpenRouter、Ollama、vLLM 都是改个 `AI_BASE_URL` 的事：
+
+```bash
+AI_BASE_URL=https://api.deepseek.com/v1
+AI_API_KEY=sk-...
+AI_MODEL=deepseek-chat
+```
+
+Anthropic 原生：`AI_PROVIDER=anthropic`（`AI_MODEL` 缺省 `claude-sonnet-4-5`）。
+要接别的协议：`AI_PROVIDER=custom` + `AI_MODULE=./my-provider.mjs`，模块导出 `translate({system, user})` 即可。
+
+本地开发把这几个变量写进 `.env.local` 再 `export`，或直接前缀在命令行上；CI 走仓库 Variables + Secrets（见下）。
+
+### 翻译流水线做了什么
+
+- **结构保护**：代码块、行内代码、链接地址、图片路径、JSX 标签先换成占位符，翻完再换回来。技术文档里这些被改写，站点会直接坏。
+- **只翻该翻的**：front matter 只动 `title` / `sidebar_label` / `description`，`slug`、`sidebar_position` 这类构建输入一律不碰。
+- **增量**：`.i18n-cache.json` 记录每篇源文档哈希，源没变就不重复调模型。**这个文件要提交进仓库**，CI 才能接着上一轮跑。
+- **版本策略**：默认只翻 `current` 和最新一个已发布版本，历史快照不动（`--all-versions` 可全量）。
+- **术语表**：`tools/i18n/glossary.json` 的 `keep` 原样保留，`preferred` 固定译法，保证「界面宏」「按键宏」这类词全站一致。
+
+### 离线包
+
+离线包也会带译文，但它的版本名和在线站对不上：离线构建关了版本化，Docusaurus 只认 `current`，而已发布版本的译文在 `version-1.2.2/` 下。所以 `npm run build:offline` 会先调 `tools/i18n/prepare-offline.mjs` 生成临时目录 `.i18n-offline/`，把目标版本译文映射成 `current`，再让 `i18n.path` 指过去——仓库里的 `i18n/` 不会被改动。
+
+不想让某门语言进离线包（文档正文会打进 JS bundle，体积翻倍）就在 `locales.json` 里给它加 `"offline": false`。
+
+离线搜索按语言分了索引：`window.__RMT_SEARCH__.locales[<code>]`，UI 按当前 hash 前缀选桶，切语言后搜索结果跟着换。
+
+### CI
+
+`.github/workflows/i18n.yml`：
+
+- **PR**：只跑 `i18n:check`，把缺失/过期清单写进 job summary 并上传 artifact，不改文件。
+- **push main**：自动翻译变更文档，把译文提交回 main。没配 `AI_API_KEY` / `AI_BASE_URL` 就跳过，流水线保持绿色。
+
+在仓库 Settings → Secrets and variables → Actions 里配：`AI_API_KEY`（Secret）、`AI_BASE_URL` / `AI_MODEL` / `AI_PROVIDER`（Variables）。
+
+### 需要留意的地方
+
+- 首页就是 `docs/intro.mdx`（`routeBasePath: '/'`），英文站 `/en/` 的首页同样取这篇的译文，它没翻的话打开是中文。
+- 离线包走 hash 路由，语言切换链接形如 `#/en/...`。这块是主题自带组件的行为，**首次开启多语言后建议用 `file://` 实际点一遍切换器**。
+- 在线搜索多语言下每门语言一份索引，`docsRouteBasePath` 在非默认语言下是否要带前缀，开启语言后跑一次 `build` 确认。
+- 站点文案（导航、页脚、侧边栏分类）在 `i18n/<locale>/docusaurus-theme-classic/*.json` 和 `.../docusaurus-plugin-content-docs/*.json`，由 `write-translations` 生成，`i18n:sync` 负责翻译其中的中文条目。
 
 ## 搜索
 

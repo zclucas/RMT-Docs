@@ -21,6 +21,10 @@ module.exports = function offlineSearchPlugin(context, options) {
   const siteDir = context.siteDir;
   const docsPath = (options && options.docsPath) || 'docs';
   const versionLabel = (options && options.versionLabel) || '';
+  // 多语言：每门语言一个桶，UI 按当前 hash 前缀挑。没传就退回单语言的老形状。
+  const locales = (options && options.locales) || [
+    {code: context.i18n.defaultLocale, docsPath, versionLabel},
+  ];
 
   return {
     name: 'offline-search',
@@ -36,16 +40,24 @@ module.exports = function offlineSearchPlugin(context, options) {
 
     async postBuild(props) {
       const outDir = props.outDir || path.join(siteDir, 'build');
-      const {version, docs, missing} = buildIndex({
+      const {byLocale, missing} = buildIndex({
         routes: props.routes,
         siteDir,
-        docsDir: path.join(siteDir, docsPath),
-        versionLabel,
+        locales: locales.map((item) => ({
+          ...item,
+          versionLabel: item.versionLabel ?? versionLabel,
+        })),
+        defaultLocale: context.i18n.defaultLocale,
       });
+
+      const payload = {
+        defaultLocale: context.i18n.defaultLocale,
+        locales: byLocale,
+      };
 
       fs.writeFileSync(
         path.join(outDir, INDEX_FILE),
-        `window.__RMT_SEARCH__=${JSON.stringify({version, docs})};\n`,
+        `window.__RMT_SEARCH__=${JSON.stringify(payload)};\n`,
         'utf8',
       );
       fs.copyFileSync(
@@ -54,8 +66,11 @@ module.exports = function offlineSearchPlugin(context, options) {
       );
 
       const size = (fs.statSync(path.join(outDir, INDEX_FILE)).size / 1024).toFixed(0);
+      const summary = Object.entries(byLocale)
+        .map(([code, bucket]) => `${code} ${bucket.docs.length} 条`)
+        .join(' / ');
       console.log(
-        `[offline-search] 索引 ${docs.length} 条 / ${size}KB（版本 ${version || '未知'}）`,
+        `[offline-search] 索引 ${summary} / ${size}KB（版本 ${versionLabel || '未知'}）`,
       );
       if (missing.length) {
         console.warn(
@@ -64,8 +79,13 @@ module.exports = function offlineSearchPlugin(context, options) {
             .join(', ')}`,
         );
       }
-      if (!docs.length) {
-        console.warn('[offline-search] 索引为空，检查 docsPath 参数是否指到了正确的版本目录');
+      const empty = Object.entries(byLocale).filter(([, bucket]) => !bucket.docs.length);
+      if (empty.length) {
+        console.warn(
+          `[offline-search] 这些语言索引为空，检查 docsPath 是否指到了正确的目录: ${empty
+            .map(([code]) => code)
+            .join(', ')}`,
+        );
       }
     },
   };

@@ -1,0 +1,40 @@
+{
+  "$comment": "术语表。keep 里的词原样保留不翻译；preferred 是固定译法，保证同一概念全站一致。翻译流水线会把这份表塞进 prompt。新增术语直接往数组/对象里加。",
+  "keep": [
+    "RMT",
+    "AutoHotkey",
+    "AHK",
+    "YOLO",
+    "ONNX",
+    "OpenCV",
+    "DLL",
+    "INI",
+    "IPC",
+    "GUI",
+    "UIMacro",
+    "PresssKeyUtil",
+    "WrokGlobalUtil",
+    "Pic",
+    "Button",
+    "Docusaurus"
+  ],
+  "preferred": {
+    "界面宏": "UI Macro",
+    "按键宏": "Key Macro",
+    "指令手册": "Command Reference",
+    "图文识别": "Image-Text Recognition",
+    "相似度": "Similarity",
+    "偏移": "Offset",
+    "坐标": "Coordinate",
+    "触发器": "Trigger",
+    "绑定窗口": "Bind Window",
+    "循环": "Loop",
+    "延时": "Delay",
+    "预览": "Preview",
+    "常见问题": "FAQ",
+    "常见报错": "Common Errors",
+    "快速上手": "Quick Start",
+    "软件介绍": "Overview",
+    "更新日志": "Changelog"
+  }
+}
