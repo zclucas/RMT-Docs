@@ -5,6 +5,9 @@
 /build
 /build-offline
 
+# 离线构建用的临时译文目录（tools/i18n/prepare-offline.mjs 生成）
+/.i18n-offline
+
 # Generated files
 .docusaurus
 .cache-loader

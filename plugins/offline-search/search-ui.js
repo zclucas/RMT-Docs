@@ -10,9 +10,24 @@
   'use strict';
 
   var DATA = window.__RMT_SEARCH__;
-  if (!DATA || !DATA.docs || !DATA.docs.length) return;
 
-  var DOCS = DATA.docs;
+  // 多语言：按当前路由的语言前缀挑索引桶。
+  // 离线包走 hash 路由，地址形如 #/en/guide/x，第一段就是语言代码；
+  // 切语言不刷新页面，所以每次搜索都重新取一次，不能缓存成常量。
+  function currentBucket() {
+    if (DATA && DATA.locales) {
+      var hash = (window.location.hash || '').replace(/^#\/?/, '');
+      var code = hash.split('/')[0];
+      return DATA.locales[code] || DATA.locales[DATA.defaultLocale] || null;
+    }
+    // 兼容旧的单语言索引形状（{version, docs}）
+    return DATA && DATA.docs && DATA.docs.length
+      ? {docs: DATA.docs, version: DATA.version}
+      : null;
+  }
+
+  var BUCKET = currentBucket();
+  if (!BUCKET || !BUCKET.docs || !BUCKET.docs.length) return;
   var MAX_RESULTS = 12;
   var SNIPPET_PAD = 44;
 
@@ -115,9 +130,12 @@
     });
     if (!terms.length) return [];
 
+    var bucket = currentBucket() || BUCKET;
+    var docs = bucket.docs || [];
+
     var hits = [];
-    for (var i = 0; i < DOCS.length; i++) {
-      var doc = DOCS[i];
+    for (var i = 0; i < docs.length; i++) {
+      var doc = docs[i];
       var title = lower(doc.t);
       var headings = lower((doc.h || []).join(' '));
       var body = lower(doc.b);
@@ -227,7 +245,7 @@
 
   var results = [];
   var activeIndex = -1;
-  var versionTip = DATA.version ? '离线版 ' + DATA.version : '离线版';
+  var versionTip = BUCKET.version ? '离线版 ' + BUCKET.version : '离线版';
 
   function openPanel() {
     panel.classList.add('is-open');

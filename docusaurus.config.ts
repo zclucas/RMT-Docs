@@ -1,9 +1,33 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import type {PluginOptions as SearchOptions} from '@easyops-cn/docusaurus-search-local';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
+// 语言清单的唯一来源是 locales.json。加一门语言只需要往那个文件里加一项，
+// 然后跑 npm run i18n:sync 生成译文；配置、翻译脚本、CI 读的都是同一份数据，
+// 这里不写死任何语言代码。
+type LocaleEntry = {
+  code: string;
+  label: string;
+  htmlLang?: string;
+  direction?: 'ltr' | 'rtl';
+  // 是否打进离线包（打包进 RMT 客户端的那个），体积敏感的语言可以关掉
+  offline?: boolean;
+};
+
+const siteDir = process.cwd();
+const localeList = JSON.parse(
+  fs.readFileSync(path.join(siteDir, 'locales.json'), 'utf8'),
+) as {defaultLocale: string; locales: LocaleEntry[]};
+
+const {defaultLocale} = localeList;
+const locales = localeList.locales.map((item) => item.code);
+// 只有一门语言时不显示切换器，避免导航栏出现一个点了没反应的下拉
+const hasMultipleLocales = locales.length > 1;
 
 const config: Config = {
   title: 'RMT 文档',
@@ -25,8 +49,19 @@ const config: Config = {
   onBrokenLinks: 'warn',
 
   i18n: {
-    defaultLocale: 'zh-Hans',
-    locales: ['zh-Hans'],
+    defaultLocale,
+    locales,
+    // label 是语言切换器里显示的名字（各语言的自我称呼，不跟着界面语种变）
+    localeConfigs: Object.fromEntries(
+      localeList.locales.map((item) => [
+        item.code,
+        {
+          label: item.label,
+          htmlLang: item.htmlLang ?? item.code,
+          direction: item.direction ?? 'ltr',
+        },
+      ]),
+    ),
   },
 
   presets: [
@@ -126,6 +161,10 @@ const config: Config = {
           html: '支持者星空',
           position: 'left',
         },
+        // 语言切换器：locales.json 里不止一门语言时才出现
+        ...(hasMultipleLocales
+          ? [{type: 'localeDropdown' as const, position: 'right' as const}]
+          : []),
         {
           type: 'docsVersionDropdown',
           position: 'right',

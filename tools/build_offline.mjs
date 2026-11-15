@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {prepareOfflineI18n} from './i18n/prepare-offline.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const siteRoot = path.resolve(here, '..');
@@ -56,6 +57,16 @@ if (!fs.existsSync(bin)) {
 // 先清空产物目录，避免上一版残留的文件混进新包
 const outDir = path.join(siteRoot, 'build-offline');
 fs.rmSync(outDir, {recursive: true, force: true});
+
+// 离线构建关闭了版本化，Docusaurus 只认 "current" 这个版本名，
+// 所以要把目标版本的译文搬到 .i18n-offline/<locale>/.../current/ 再指过去。
+// 没配任何目标语言时这一步什么也不做，配置里的 i18n.path 也不会生效。
+const i18nInfo = prepareOfflineI18n({docsPath});
+console.log(
+  i18nInfo.prepared.length
+    ? `[build:offline] 译文语言: ${i18nInfo.prepared.map((item) => item.code).join(', ')}（版本键 ${i18nInfo.versionKey}）`
+    : '[build:offline] 无目标语言，离线包只出默认语言',
+);
 
 const res = spawnSync(
   process.execPath,

@@ -1,0 +1,110 @@
+name: Docs release
+
+# 发版入口：推一个 v 开头的 tag，例如
+#   git tag v1.4.0 && git push origin v1.4.0
+# tag 是唯一入口，不再是 workflow_dispatch。
+#
+# 设计取舍：tag 指向「docs/ 内容定稿」的那个 commit，版本快照是这次 workflow 产生的
+# 后续提交。所以 tag 本身不含 versioned_docs/version-1.4.0，要看快照后的状态就取
+# main 上那条 "docs: 发布 1.4.0" 提交。
+#
+# 不建 Release、不产离线包：离线的 zip 需要时本地 npm run build:offline 生成。
+# build:offline 仍留在闸门里，防的是离线配置漂移（共享配置 + 各自覆盖字段）。
+on:
+  push:
+    tags:
+      # 只用 tag glob，别在这拼正则；严格校验交给下面的 shell
+      - 'v*.*.*'
+
+permissions: {}
+
+concurrency:
+  group: docs-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: 快照 + 校验 + 发布
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # 从 main 取快照，而不是从 tag 取：两者必须同一个 commit，下面第一步会验
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: 解析版本号
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::tag 名不合法：$TAG（要 v1.4.0 这种）"
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "版本 $VERSION"
+
+      # tag 落后于 main 的话，快照会拷到旧内容，站点上就少一版。宁可失败。
+      - name: 校验 tag 在 main 顶端
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+            echo "::error::tag $TAG 指向 $GITHUB_SHA，main 已在 $(git rev-parse HEAD)。先把 main 推完再打 tag。"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      # 重跑时版本目录已经在库里，不重复快照，避免 docs:version 报「版本已存在」
+      - name: 快照 docs
+        run: |
+          if jq -e --arg v "$VERSION" 'index($v)' versions.json >/dev/null; then
+            test -d "versioned_docs/version-$VERSION" || {
+              echo "::error::versions.json 有 $VERSION 但没有 versioned_docs/version-$VERSION"
+              exit 1; }
+            echo "版本 $VERSION 已快照过，跳过"
+          else
+            npm run docs:version "$VERSION"
+          fi
+          sed -i "s/lastVersion: '[^']*'/lastVersion: '$VERSION'/" docusaurus.config.ts
+          grep -n 'lastVersion' docusaurus.config.ts
+
+      - name: 闸门：类型检查
+        run: npm run typecheck
+
+      # 这条路径没有 PR 预览，在线构建必须自己跑一遍再推 main
+      - name: 闸门：在线站能构建
+        run: npm run build
+
+      - name: 闸门：离线包能构建
+        run: npm run build:offline -- "$VERSION"
+
+      # 构建通过不等于能塞进 RMT：Main\SelfCheck.ahk 卡 Web\index.html 必须存在
+      - name: 闸门：离线产物契约
+        run: |
+          test -f build-offline/index.html || {
+            echo "::error::离线包根目录缺 index.html"; exit 1; }
+          test ! -e build-offline/changelog || {
+            echo "::error::离线包里出现了 /changelog，检查 offline 配置的插件过滤"; exit 1; }
+
+      - name: 提交快照到 main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo "没有需要提交的变更"
+            exit 0
+          fi
+          git commit -m "docs: 发布 $VERSION"
+          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:main"

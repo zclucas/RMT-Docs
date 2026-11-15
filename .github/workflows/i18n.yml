@@ -1,0 +1,146 @@
+name: i18n
+
+# 多语言流水线。语言清单来自 locales.json，这里不写死任何语言代码。
+#
+# PR：只检查，不改文件。缺失/过期的清单写进 job summary，并作为 artifact 留档。
+# push 到 main：调模型翻译新增或改动的文档，把译文提交回 main。
+#               没有配置翻译服务（AI_API_KEY / AI_BASE_URL）时自动跳过，不会失败。
+#
+# 防循环：译文提交只动 i18n/ 和 .i18n-cache.json，而下面的 paths 不含这两个，
+# 所以提交不会再次触发本 workflow。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'versioned_docs/**'
+      - 'changelog/**'
+      - 'locales.json'
+      - 'tools/i18n/**'
+      - 'package.json'
+      - '.github/workflows/i18n.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'versioned_docs/**'
+      - 'changelog/**'
+      - 'locales.json'
+      - 'tools/i18n/**'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: i18n-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: 缺译检查
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - run: npm ci
+
+      - name: 生成缺译报告
+        run: |
+          npm run i18n:check -- --markdown | tee i18n-report.md
+          {
+            echo '## 译文状态'
+            echo ''
+            cat i18n-report.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: i18n-report
+          path: i18n-report.md
+          retention-days: 7
+
+  sync:
+    name: 自动翻译并提交
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - run: npm ci
+
+      # 没有配置翻译服务时不报错，直接把这一步标成跳过：
+      # 仓库刚接入多语言、还没配 key 的阶段，流水线照样是绿的
+      - name: 探测翻译服务
+        id: gate
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL }}
+        run: |
+          if [ -n "$AI_API_KEY" ] || [ -n "$AI_BASE_URL" ]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::未配置 AI_API_KEY / AI_BASE_URL，跳过自动翻译'
+          fi
+
+      - name: 同步译文
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          # 换供应商只改仓库 Variables，不用动这个文件
+          AI_PROVIDER: ${{ vars.AI_PROVIDER || 'openai' }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL }}
+          AI_MODEL: ${{ vars.AI_MODEL }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_CONCURRENCY: '4'
+        run: npm run i18n:sync
+
+      - name: 闸门：类型检查
+        if: steps.gate.outputs.enabled == 'true'
+        run: npm run typecheck
+
+      - name: 提交译文
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo '没有译文变更'
+            exit 0
+          fi
+          git commit -m 'docs(i18n): 同步译文'
+          # docs-release 也可能在同一时间推 main，被拒就 rebase 后再试
+          for attempt in 1 2 3; do
+            if git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:main; then
+              echo "第 $attempt 次推送成功"
+              exit 0
+            fi
+            echo "推送被拒，rebase 后重试（$attempt/3）"
+            git pull --rebase --autostash "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" main
+          done
+          echo '::error::译文提交推送失败'
+          exit 1
